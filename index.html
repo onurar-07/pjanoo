@@ -441,9 +441,9 @@
         let isPaused = false;
 
         // Melody part
-        //const part = new Tone.Part((time, value) => {
-        //    synth.triggerAttackRelease(value.note, value.duration, time);
-        //}, song).start(0);
+        const part = new Tone.Part((time, value) => {
+            synth.triggerAttackRelease(value.note, value.duration, time);
+        }, song).start(0);
 
         // first Drum part (Tone.Part)
         const drumPart1 = new Tone.Part((time, value) => {
