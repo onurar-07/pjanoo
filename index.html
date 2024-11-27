@@ -1,1 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Song Pjanoo with Tone.js</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.39/Tone.min.js"></script>
+    <style>
+        /* General body and layout styling */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+    
+        /* Heading Styling */
+        h1 {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #e74c3c;
+        }
+    
+        /* Container for controls */
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+    
+        /* Label for each control element */
+        label {
+            font-size: 1rem;
+            color: #ecf0f1;
+        }
+    
+        /* Styling for the sliders and range inputs */
+        input[type="range"] {
+            width: 200px;
+            height: 10px;
+            background-color: #34495e;
+            border-radius: 5px;
+            border: none;
+            -webkit-appearance: none;
+            appearance: none;
+            transition: background-color 0.3s;
+        }
+    
+        input[type="range"]:hover {
+            background-color: #e74c3c;
+        }
+    
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e74c3c;
+            cursor: pointer;
+        }
+    
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e74c3c;
+            cursor: pointer;
+        }
+    
+        /* Styling for the select dropdown */
+        select {
+            padding: 5px;
+            background-color: #34495e;
+            border-radius: 5px;
+            border: none;
+            color: #ecf0f1;
+            font-size: 1rem;
+        }
+    
+        /* Styling for the buttons */
+        button {
+            padding: 10px 20px;
+            background-color: #e74c3c;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 10px;
+        }
+    
+        button:hover {
+            background-color: #c0392b;
+        }
+    
+        /* Button container for the control buttons */
+        .button-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+    
+        /* Controls display for values */
+        .controls span {
+            font-size: 1rem;
+            color: #ecf0f1;
+            margin-left: 10px;
+        }
+    
+        /* Responsive styling for small screens */
+        @media screen and (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+    
+            h1 {
+                font-size: 1.5rem;
+            }
+    
+            .controls {
+                flex-direction: column;
+            }
+    
+            .button-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+    
+</head>
+<body>
+    <h1>Interactive Song with Tone.js</h1>
+    <button id="startButton">Start</button>
+    <button id="pauseButton">Pause/Continue</button>
+    <button id="stopButton">Stop</button>
 
+    <div class="controls">
+        <label for="bpmSlider">BPM:</label>
+        <input type="range" id="bpmSlider" min="60" max="250" value="126">
+        <span id="bpmDisplay">126</span>
+    </div>
+
+    <div class="controls">
+        <label for="delaySlider">Delay:</label>
+        <input type="range" id="delaySlider" min="0" max="1" step="0.01" value="0">
+        <span id="delayDisplay">0</span>
+    </div>
+
+    <div class="controls">
+        <label for="distortionSlider">Distortion:</label>
+        <input type="range" id="distortionSlider" min="0" max="1" step="0.01" value="0">
+        <span id="distortionDisplay">0</span>
+    </div>
+
+    <div class="controls">
+        <label for="oscillatorSelect">Oscillator Type:</label>
+        <select id="oscillatorSelect">
+            <option value="sine">Sine</option>
+            <option value="square">Square</option>
+            <option value="triangle">Triangle</option>
+            <option value="sawtooth">Sawtooth</option>
+        </select>
+    </div>
+
+    <div class="controls">
+        <label for="filterSlider">Lowpass Filter Cut-off Frequency:</label>
+        <input type="range" id="filterSlider" min="20" max="2000" value="1000">
+        <span id="filterDisplay">1000</span>
+    </div>
+
+    <div class="controls">
+        <label for="panSlider">Panning:</label>
+        <input type="range" id="panSlider" min="-1" max="1" step="0.01" value="0">
+        <span id="panDisplay">0</span>
+    </div>
+
+    <script>
+        const synth = new Tone.Synth().toDestination();
+        const delay = new Tone.FeedbackDelay(0, 0.5).toDestination();
+        const distortion = new Tone.Distortion(0).toDestination();
+        const filter = new Tone.Filter(1000, "lowpass").toDestination();
+        const pan = new Tone.Panner(0).toDestination(); // Panning control
+
+        // Connect synth to the effects chain and then to the panner
+        synth.connect(delay);
+        synth.connect(distortion);
+        synth.connect(filter);
+        synth.connect(pan); // Connect synth to panner
+
+        const kickSynth = new Tone.MembraneSynth({
+            pitchDecay: 0.05,
+            octaves: 2,
+            oscillator: { type: "sine" },
+            envelope: { attack: 0.01, decay: 0.4, sustain: 0, release: 1 }
+        }).toDestination();
+
+        const clapSynth = new Tone.NoiseSynth({
+            noise: { type: "white" },
+            envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.2 }
+        }).toDestination();
+
+        const hiHatSynth = new Tone.NoiseSynth({
+            noise: { type: "white" },
+            envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.1 }
+        }).toDestination();
+
+
+        const drumPattern1 = [
+            { note: "kick", time: 0 },     // Kick on beat 0
+            { note: "clap", time: 0.5 },   // Clap on beat 0.5
+            { note: "kick", time: 0.5 },
+            { note: "kick", time: 1 },     // Kick on beat 1
+            { note: "kick", time: 1.5 },
+            { note: "clap", time: 1.5 },   // Clap on beat 1.5
+            { note: "kick", time: 2 },     // Kick on beat 0
+            { note: "clap", time: 2.5 },   // Clap on beat 0.5
+            { note: "kick", time: 2.5 },
+            { note: "kick", time: 3 },     // Kick on beat 1
+            { note: "kick", time: 3.5 },
+            { note: "clap", time: 3.5 },   // Clap on beat 1.5
+            { note: "kick", time: 4 },     // Kick on beat 0
+            { note: "clap", time: 4.5 },   // Clap on beat 0.5
+            { note: "kick", time: 4.5 },
+            { note: "kick", time: 5 },     // Kick on beat 1
+            { note: "kick", time: 5.5 },
+            { note: "clap", time: 5.5 },   // Clap on beat 1.5
+            { note: "kick", time: 6 },     // Kick on beat 0
+            { note: "clap", time: 6.5 },   // Clap on beat 0.5
+            { note: "kick", time: 6.5 },
+            { note: "kick", time: 7 },     // Kick on beat 1
+            { note: "kick", time: 7.5 },
+            { note: "clap", time: 7.5 },   // Clap on beat 1.5
+        ];
+
+        const drumPatternClaps = [
+            { note: "clap", time: 0 },     // Clap on 0
+            { note: "clap", time: 0.5 },   // Clap on 0.5
+            { note: "clap", time: 1 },     // Clap on 1
+            { note: "clap", time: 1.5 },   // Clap on 1.5
+            { note: "clap", time: 2 },     // Clap on 2
+            { note: "clap", time: 2.5 },   // Clap on 2.5
+            { note: "clap", time: 3 },     // Clap on 3
+            { note: "clap", time: 3.5 },   // Clap on 3.5
+            { note: "clap", time: 4 },     // Clap on 4
+            { note: "clap", time: 4.5 },   // Clap on 4.5
+            { note: "clap", time: 5 },     // Clap on 5
+            { note: "clap", time: 5.5 },   // Clap on 5.5
+            { note: "clap", time: 6 },     // Clap on 6
+            { note: "clap", time: 6.5 },   // Clap on 6.5
+            { note: "clap", time: 7 },     // Clap on 7
+            { note: "clap", time: 7.5 },   // Clap on 7.5
+            { note: "clap", time: 8 },     // Clap on 8
+            { note: "clap", time: 8.5 },   // Clap on 8.5
+            { note: "clap", time: 9 },     // Clap on 9
+            { note: "clap", time: 9.5 },   // Clap on 9.5
+            { note: "clap", time: 10 },    // Clap on 10
+            { note: "clap", time: 10.5 },  // Clap on 10.5
+            { note: "clap", time: 11 },    // Clap on 11
+            { note: "clap", time: 11.5 },  // Clap on 11.5
+            { note: "clap", time: 12 },    // Clap on 12
+            { note: "clap", time: 12.5 },  // Clap on 12.5
+            { note: "clap", time: 13 },    // Clap on 13
+            { note: "clap", time: 13.5 },  // Clap on 13.5
+            { note: "clap", time: 14 },    // Clap on 14
+        ];
+
+
+        const drumPattern2 = [
+            { note: "kick", time: 0 },     // Kick on beat 0
+            { note: "clap", time: 0.5 },   // Clap on beat 0.5
+            { note: "kick", time: 0.5 },
+            { note: "hiHat", time: 0.5 },
+            { note: "kick", time: 1 },     // Kick on beat 1
+            { note: "kick", time: 1.5 },
+            { note: "hiHat", time: 1.5 },
+            { note: "clap", time: 1.5 },   // Clap on beat 1.5
+            //{ note: "kick", time: 2 },     // Kick on beat 2
+        ];
+
+        const song = [
+            { note: "D4", duration: "4n", time: 0 },
+            { note: "F4", duration: "4n", time: 0.125},
+            { note: "D4", duration: "4n", time: 0.25 },
+            { note: "C4", duration: "4n", time: 0.375 },
+            { note: "F4", duration: "4n", time: 0.5 },
+            { note: "C4", duration: "4n", time: 0.625 },
+            { note: "D4", duration: "4n", time: 0.75 },
+            { note: "G4", duration: "4n", time: 0.875 },
+
+            { note: "C4", duration: "4n", time: 1 },
+            { note: "D4", duration: "4n", time: 1.125 },
+            { note: "F4", duration: "4n", time: 1.25},
+            
+            { note: "C4", duration: "4n", time: 1.375 },
+            { note: "D4", duration: "4n", time: 1.5 },
+            { note: "F4", duration: "4n", time: 1.625},
+
+            { note: "C4", duration: "4n", time: 1.75 },
+            { note: "D4", duration: "4n", time: 1.875 },
+            { note: "F4", duration: "4n", time: 2},
+
+            { note: "C4", duration: "4n", time: 2.125 },
+            { note: "D4", duration: "4n", time: 2.25 },
+            { note: "F4", duration: "4n", time: 2.375},
+            ///////////////////////
+            { note: "C4", duration: "4n", time: 2.5 },
+            { note: "D4", duration: "4n", time: 2.625 },
+            { note: "G4", duration: "4n", time: 2.75},
+            //////////////////////////////
+            { note: "C4", duration: "4n", time: 2.875 },
+            { note: "D4", duration: "4n", time: 3 },
+            { note: "F4", duration: "4n", time: 3.125},
+            
+            { note: "C4", duration: "4n", time: 3.25 },
+            { note: "D4", duration: "4n", time: 3.375 },
+            { note: "F4", duration: "4n", time: 3.5},
+
+            { note: "C4", duration: "4n", time: 3.625 },
+            { note: "D4", duration: "4n", time: 3.75 },
+            { note: "F4", duration: "4n", time: 3.875},
+
+            { note: "C4", duration: "4n", time: 4 },
+            { note: "D4", duration: "4n", time: 4.125 },
+            { note: "F4", duration: "4n", time: 4.25},
+            //////////////////
+            { note: "C4", duration: "4n", time: 4.375 },
+            { note: "D4", duration: "4n", time: 4.5 },
+            { note: "G4", duration: "4n", time: 4.625},
+            /////////////////////
+            { note: "C4", duration: "4n", time: 4.75 },
+            { note: "D4", duration: "4n", time: 4.875 },
+            { note: "F4", duration: "4n", time: 5},
+
+            { note: "C4", duration: "4n", time: 5.125 },
+            { note: "D4", duration: "4n", time: 5.25 },
+            { note: "F4", duration: "4n", time: 5.375},
+
+            { note: "C4", duration: "4n", time: 5.5 },
+            { note: "D4", duration: "4n", time: 5.625 },
+            { note: "F4", duration: "4n", time: 5.75},
+            ///////////////////////7
+            { note: "C4", duration: "4n", time: 5.875 },
+            { note: "D4", duration: "4n", time: 6 },
+            { note: "G4", duration: "4n", time: 6.125},
+            /////////////////////
+            { note: "C4", duration: "4n", time: 5.875 },
+            { note: "D4", duration: "4n", time: 6 },
+            { note: "Bb4", duration: "8n", time: 6.0625 },
+            { note: "C5", duration: "8n", time: 6.125 },
+            //////////////////7
+            { note: "C4", duration: "4n", time: 6.25 },
+            { note: "D4", duration: "4n", time: 6.375 },
+            { note: "G4", duration: "4n", time: 6.5},
+            ////////////////////////
+            { note: "C4", duration: "4n", time: 6.625 },
+            { note: "D4", duration: "4n", time: 6.75 },
+            { note: "F4", duration: "4n", time: 6.875},
+
+            { note: "C4", duration: "4n", time: 7 },
+            { note: "D4", duration: "4n", time: 7.125 },
+            { note: "F4", duration: "4n", time: 7.25},
+
+        ];
+        //var gminor_chord = ["D3", "G3", "Bb3"];
+        //var dminor_chord = ["D3", "F3", "A3"];
+        //var gminor_inv_chord = ["Bb2", "D3", "G3"];
+
+        const song2 = [
+            { note: "D3", duration: "4n", time: 0},
+            { note: "G3", duration: "4n", time: 0},
+            { note: "Bb3", duration: "4n", time: 0},
+
+            { note: "D3", duration: "4n", time: 0.25},
+            { note: "G3", duration: "4n", time: 0.25},
+            { note: "Bb3", duration: "4n", time: 0.25},
+            /////////////////////
+            { note: "D3", duration: "4n", time: 0.5},
+            { note: "F3", duration: "4n", time: 0.5},
+            { note: "A3", duration: "4n", time: 0.5},
+
+            { note: "D3", duration: "4n", time: 0.5},
+            { note: "F3", duration: "4n", time: 0.5},
+            { note: "A3", duration: "4n", time: 0.5},
+            //////////////////////////
+            { note: "Bb23", duration: "4n", time: 0.875},
+            { note: "D3", duration: "4n", time: 0.875},
+            { note: "G3", duration: "4n", time: 0.875},
+
+            { note: "Bb23", duration: "4n", time: 1.25},
+            { note: "D3", duration: "4n", time: 1.25},
+            { note: "G3", duration: "4n", time: 1.25},
+
+            { note: "Bb23", duration: "4n", time: 1.5},
+            { note: "D3", duration: "4n", time: 1.5},
+            { note: "G3", duration: "4n", time: 1.5},
+            /////////////////////////////////
+            { note: "Bb23", duration: "4n", time: 1.75},
+            { note: "D3", duration: "4n", time: 1.75},
+            { note: "G3", duration: "4n", time: 1.75},
+
+            { note: "Bb23", duration: "4n", time: 2},
+            { note: "D3", duration: "4n", time: 2},
+            { note: "G3", duration: "4n", time: 2},
+            ///////////////////////
+            { note: "D3", duration: "4n", time: 2.25},
+            { note: "F3", duration: "4n", time: 2.25},
+            { note: "A3", duration: "4n", time: 2.25},
+
+            { note: "D3", duration: "4n", time: 2.5},
+            { note: "F3", duration: "4n", time: 2.5},
+            { note: "A3", duration: "4n", time: 2.5},
+            /////////////////////
+            { note: "D3", duration: "4n", time: 2.75},
+            { note: "G3", duration: "4n", time: 2.75},
+            { note: "Bb3", duration: "4n", time: 2.75},
+
+            { note: "D3", duration: "4n", time: 3.125},
+            { note: "G3", duration: "4n", time: 3.125},
+            { note: "Bb3", duration: "4n", time: 3.125},
+
+            { note: "D3", duration: "4n", time: 3.125},
+            { note: "G3", duration: "4n", time: 3.125},
+            { note: "Bb3", duration: "4n", time: 3.125},
+
+        ];
+        
+        let bpm = 126; // Default BPM
+        let isPlaying = false;
+        let isPaused = false;
+
+        // Melody part
+        //const part = new Tone.Part((time, value) => {
+        //    synth.triggerAttackRelease(value.note, value.duration, time);
+        //}, song).start(0);
+
+        // first Drum part (Tone.Part)
+        const drumPart1 = new Tone.Part((time, value) => {
+            if (value.note === "kick") {
+                kickSynth.triggerAttackRelease("C1", "8n", time);
+            } else if (value.note === "clap") {
+                clapSynth.triggerAttackRelease("16n", time);
+            }
+        }, drumPattern1).start(0);
+
+        /* couldn't make it in time
+        const clapPart1 = new Tone.Part((time, value) => {
+            if (value.note === "kick") {
+                kickSynth.triggerAttackRelease("C1", "8n", time);
+            } else if (value.note === "clap") {
+                clapSynth.triggerAttackRelease("16n", time);
+            }
+        }, drumPatternClaps).start(now);
+        
+*/
+        
+        
+
+        // Sync BPM slider
+        document.getElementById("bpmSlider").addEventListener("input", (e) => {
+            bpm = e.target.value;
+            Tone.Transport.bpm.value = bpm;
+            document.getElementById("bpmDisplay").textContent = bpm;
+        });
+
+        // Update delay only when the user stops interacting with the slider
+        const delaySlider = document.getElementById("delaySlider");
+        delaySlider.addEventListener("change", (e) => {
+            const delayValue = e.target.value;
+            delay.delayTime.value = delayValue;
+            document.getElementById("delayDisplay").textContent = delayValue;
+        });
+
+        // Update distortion only when the user stops interacting with the slider
+        const distortionSlider = document.getElementById("distortionSlider");
+        distortionSlider.addEventListener("change", (e) => {
+            const distortionValue = e.target.value;
+            distortion.distortion = distortionValue;
+            document.getElementById("distortionDisplay").textContent = distortionValue;
+        });
+
+        // Update oscillator type when the user selects a new type
+        const oscillatorSelect = document.getElementById("oscillatorSelect");
+        oscillatorSelect.addEventListener("change", (e) => {
+            synth.oscillator.type = e.target.value;
+        });
+
+        // Update filter frequency when the user changes the slider
+        const filterSlider = document.getElementById("filterSlider");
+        filterSlider.addEventListener("input", (e) => {
+            const filterValue = e.target.value;
+            filter.frequency.value = filterValue;
+            document.getElementById("filterDisplay").textContent = filterValue;
+        });
+
+        // Update pan when the user adjusts the pan slider
+        const panSlider = document.getElementById("panSlider");
+        panSlider.addEventListener("input", (e) => {
+            const panValue = e.target.value;
+            pan.pan.value = panValue; // Set panner value (-1 to 1)
+            document.getElementById("panDisplay").textContent = panValue;
+        });
+
+        document.getElementById("startButton").addEventListener("click", async () => {
+            if (!isPlaying) {
+                await Tone.start();
+                Tone.Transport.start();
+                isPlaying = true;
+                isPaused = false;
+            }
+        });
+
+        document.getElementById("pauseButton").addEventListener("click", () => {
+            if (isPlaying && !isPaused) {
+                Tone.Transport.pause();
+                isPaused = true;
+            } else if (isPlaying && isPaused) {
+                Tone.Transport.start();
+                isPaused = false;
+            }
+        });
+
+        document.getElementById("stopButton").addEventListener("click", () => {
+            if (isPlaying) {
+                Tone.Transport.stop();
+                isPlaying = false;
+                isPaused = false;
+            }
+        });
+
+        // Set initial BPM, Delay, Distortion, Filter Frequency, and Panning
+        Tone.Transport.bpm.value = bpm;
+        delay.delayTime.value = 0;
+        distortion.distortion = 0;
+        filter.frequency.value = 1000;
+        synth.oscillator.type = "sine";  // Default oscillator type
+        pan.pan.value = 0; // Default panning
+    </script>
+</body>
+</html>
