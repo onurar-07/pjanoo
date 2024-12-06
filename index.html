@@ -165,8 +165,18 @@
     </div>
 
     <div class="controls">
-        <label for="oscillatorSelect">Oscillator Type:</label>
+        <label for="oscillatorSelect">Oscillator Type (Melody):</label>
         <select id="oscillatorSelect">
+            <option value="sine">Sine</option>
+            <option value="square">Square</option>
+            <option value="triangle">Triangle</option>
+            <option value="sawtooth">Sawtooth</option>
+        </select>
+    </div>
+
+    <div class="controls">
+        <label for="oscillatorSelect2">Oscillator Type (Chords):</label>
+        <select id="oscillatorSelect2">
             <option value="sine">Sine</option>
             <option value="square">Square</option>
             <option value="triangle">Triangle</option>
@@ -188,6 +198,7 @@
 
     <script>
         const synth = new Tone.Synth().toDestination();
+        const chordSynth = new Tone.PolySynth(Tone.Synth).toDestination();
         const delay = new Tone.FeedbackDelay(0, 0.5).toDestination();
         const distortion = new Tone.Distortion(0).toDestination();
         const filter = new Tone.Filter(1000, "lowpass").toDestination();
@@ -198,6 +209,13 @@
         synth.connect(distortion);
         synth.connect(filter);
         synth.connect(pan); // Connect synth to panner
+        synth.volume.value = -24;
+
+        chordSynth.connect(delay);
+        chordSynth.connect(distortion);
+        chordSynth.connect(filter);
+        chordSynth.connect(pan); // Connect synth to panner
+        chordSynth.volume.value = -16;
 
         const kickSynth = new Tone.MembraneSynth({
             pitchDecay: 0.05,
@@ -205,43 +223,30 @@
             oscillator: { type: "sine" },
             envelope: { attack: 0.01, decay: 0.4, sustain: 0, release: 1 }
         }).toDestination();
+        //kickSynth.volume.value = 3;
 
         const clapSynth = new Tone.NoiseSynth({
             noise: { type: "white" },
             envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.2 }
         }).toDestination();
+        clapSynth.volume.value = -12;
 
         const hiHatSynth = new Tone.NoiseSynth({
             noise: { type: "white" },
             envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.1 }
         }).toDestination();
-
+        hiHatSynth.volume.value = 12;
 
         const drumPattern1 = [
             { note: "kick", time: 0 },     // Kick on beat 0
             { note: "clap", time: 0.5 },   // Clap on beat 0.5
             { note: "kick", time: 0.5 },
+            
             { note: "kick", time: 1 },     // Kick on beat 1
             { note: "kick", time: 1.5 },
             { note: "clap", time: 1.5 },   // Clap on beat 1.5
             { note: "kick", time: 2 },     // Kick on beat 0
-            { note: "clap", time: 2.5 },   // Clap on beat 0.5
-            { note: "kick", time: 2.5 },
-            { note: "kick", time: 3 },     // Kick on beat 1
-            { note: "kick", time: 3.5 },
-            { note: "clap", time: 3.5 },   // Clap on beat 1.5
-            { note: "kick", time: 4 },     // Kick on beat 0
-            { note: "clap", time: 4.5 },   // Clap on beat 0.5
-            { note: "kick", time: 4.5 },
-            { note: "kick", time: 5 },     // Kick on beat 1
-            { note: "kick", time: 5.5 },
-            { note: "clap", time: 5.5 },   // Clap on beat 1.5
-            { note: "kick", time: 6 },     // Kick on beat 0
-            { note: "clap", time: 6.5 },   // Clap on beat 0.5
-            { note: "kick", time: 6.5 },
-            { note: "kick", time: 7 },     // Kick on beat 1
-            { note: "kick", time: 7.5 },
-            { note: "clap", time: 7.5 },   // Clap on beat 1.5
+            
         ];
 
         const drumPatternClaps = [
@@ -249,31 +254,7 @@
             { note: "clap", time: 0.5 },   // Clap on 0.5
             { note: "clap", time: 1 },     // Clap on 1
             { note: "clap", time: 1.5 },   // Clap on 1.5
-            { note: "clap", time: 2 },     // Clap on 2
-            { note: "clap", time: 2.5 },   // Clap on 2.5
-            { note: "clap", time: 3 },     // Clap on 3
-            { note: "clap", time: 3.5 },   // Clap on 3.5
-            { note: "clap", time: 4 },     // Clap on 4
-            { note: "clap", time: 4.5 },   // Clap on 4.5
-            { note: "clap", time: 5 },     // Clap on 5
-            { note: "clap", time: 5.5 },   // Clap on 5.5
-            { note: "clap", time: 6 },     // Clap on 6
-            { note: "clap", time: 6.5 },   // Clap on 6.5
-            { note: "clap", time: 7 },     // Clap on 7
-            { note: "clap", time: 7.5 },   // Clap on 7.5
-            { note: "clap", time: 8 },     // Clap on 8
-            { note: "clap", time: 8.5 },   // Clap on 8.5
-            { note: "clap", time: 9 },     // Clap on 9
-            { note: "clap", time: 9.5 },   // Clap on 9.5
-            { note: "clap", time: 10 },    // Clap on 10
-            { note: "clap", time: 10.5 },  // Clap on 10.5
-            { note: "clap", time: 11 },    // Clap on 11
-            { note: "clap", time: 11.5 },  // Clap on 11.5
-            { note: "clap", time: 12 },    // Clap on 12
-            { note: "clap", time: 12.5 },  // Clap on 12.5
-            { note: "clap", time: 13 },    // Clap on 13
-            { note: "clap", time: 13.5 },  // Clap on 13.5
-            { note: "clap", time: 14 },    // Clap on 14
+            { note: "clap", time: 2 }
         ];
 
 
@@ -289,7 +270,120 @@
             //{ note: "kick", time: 2 },     // Kick on beat 2
         ];
 
+        const chords = [
+            { notes: ["D3", "G3", "Bb3"], duration: "8n", time: 0 }, // gminor_chord
+            { notes: ["D3", "G3", "Bb3"], duration: "8n", time: 0.25}, // gminor_chord
+            { notes: ["D3", "F3", "A3"], duration: "8n", time: 0.5 }, // dminor_chord
+            { notes: ["D3", "F3", "A3"], duration: "8n", time: 0.75 }, // dminor_chord
+
+            { notes: ["Bb2", "D3", "G3"], duration: "6n", time: 1 }, // gminor_inv_chord
+            { notes: ["Bb2", "D3", "G3"], duration: "6n", time: 1.375 }, // gminor_inv_chord
+            { notes: ["Bb2", "D3", "G3"], duration: "8n", time: 1.75 }, // gminor_inv_chord
+            { notes: [], duration: "8n", time: 2 },
+            
+        
+            { notes: ["Bb2", "D3", "G3"], duration: "8n", time: 2 }, // gminor_inv_chord
+            { notes: ["Bb2", "D3", "G3"], duration: "8n", time: 2.25 }, // gminor_inv_chord
+            { notes: ["D3", "F3", "A3"], duration: "8n", time: 2.5 }, // dminor_chord
+            { notes: ["D3", "F3", "A3"], duration: "8n", time: 2.75 }, // dminor_chord
+            { notes: ["D3", "G3", "Bb3"], duration: "6n", time: 3 }, // gminor_chord
+            { notes: ["D3", "G3", "Bb3"], duration: "6n", time: 3.375 }, // gminor_chord
+            { notes: ["D3", "G3", "Bb3"], duration: "8n", time: 3.75 }, // gminor_chord
+            { notes: [], duration: "8n", time: 4 },
+        ];
+
+        const chords_ikili_kalin = [
+            { notes: ["D3", "Bb3", "G1", "G2"], duration: "8n", time: 0 }, // gminor_chord
+            { notes: ["D3", "Bb3", "G1", "G2"], duration: "8n", time: 0.25}, // gminor_chord
+            { notes: ["D3", "A3", "F1", "F2"], duration: "8n", time: 0.5 }, // dminor_chord
+            { notes: ["D3", "A3", "F1", "F2"], duration: "8n", time: 0.75 }, // dminor_chord
+
+            { notes: ["D3", "G3", "Eb1", "Eb2"], duration: "6n", time: 1 }, // gminor_inv_chord
+            { notes: ["D3", "G3", "Eb1", "Eb2"], duration: "6n", time: 1.375 }, // gminor_inv_chord
+            { notes: ["D3", "G3", "Eb1", "Eb2"], duration: "8n", time: 1.75 }, // gminor_inv_chord
+            { notes: [], duration: "8n", time: 2 },
+            
+        
+            { notes: ["D3", "Bb3", "Eb1", "Eb2"], duration: "8n", time: 2 }, // gminor_inv_chord
+            { notes: ["D3", "Bb3", "Eb1", "Eb2"], duration: "8n", time: 2.25 }, // gminor_inv_chord
+            { notes: ["D3", "C4", "F1", "F2"], duration: "8n", time: 2.5 }, // dminor_chord
+            { notes: ["D3", "C4", "F1", "F2"], duration: "8n", time: 2.75 }, // dminor_chord
+
+            { notes: ["D3", "G3", "C1", "C2"], duration: "6n", time: 3 }, // gminor_chord
+            { notes: ["D3", "G3", "C1", "C2"], duration: "6n", time: 3.375 }, // gminor_chord
+            { notes: ["D3", "G3", "C1", "C2"], duration: "8n", time: 3.75 }, // gminor_chord
+            { notes: [], duration: "8n", time: 4 },
+
+            ///////////////////
+
+            { notes: ["D3", "Bb3", "C1", "C2"], duration: "8n", time: 4 }, // gminor_chord
+            { notes: ["D3", "Bb3", "C1", "C2"], duration: "8n", time: 4.25}, // gminor_chord
+            { notes: ["D3", "A3", "D1", "D2"], duration: "8n", time: 4.5 }, // dminor_chord
+            { notes: ["D3", "A3", "D1", "D2"], duration: "8n", time: 4.75 }, // dminor_chord
+
+            { notes: ["D3", "G3", "Eb1", "Eb2"], duration: "6n", time: 5 }, // gminor_inv_chord
+            { notes: ["D3", "G3", "Eb1", "Eb2"], duration: "6n", time: 5.375 }, // gminor_inv_chord
+            { notes: ["D3", "G3", "Eb1", "Eb2"], duration: "8n", time: 5.75 }, // gminor_inv_chord
+            { notes: [], duration: "8n", time: 6 },
+            
+        
+            { notes: ["D3", "Bb3", "Eb1", "Eb2"], duration: "8n", time: 6 }, // gminor_inv_chord
+            { notes: ["D3", "Bb3", "Eb1", "Eb2"], duration: "8n", time: 6.25 }, // gminor_inv_chord
+            { notes: ["D3", "A3", "F1", "F2"], duration: "8n", time: 6.5 }, // dminor_chord
+            { notes: ["D3", "A3", "F1", "F2"], duration: "8n", time: 6.75 }, // dminor_chord
+            { notes: ["D3", "G3", "G1", "G2"], duration: "6n", time: 7 }, // gminor_chord
+            { notes: ["D3", "G3", "G1", "G2"], duration: "6n", time: 7.375 }, // gminor_chord
+            { notes: ["D3", "G3", "G1", "G2"], duration: "8n", time: 7.75 }, // gminor_chord
+            { notes: [], duration: "8n", time: 8 },
+        ];
+        
+        const chords_ikili_ince = [
+            { notes: ["D4", "Bb4", "G1", "G2"], duration: "8n", time: 0 }, // gminor_chord
+            { notes: ["D4", "Bb4", "G1", "G2"], duration: "8n", time: 0.25}, // gminor_chord
+            { notes: ["D4", "A4", "F1", "F2"], duration: "8n", time: 0.5 }, // dminor_chord
+            { notes: ["D4", "A4", "F1", "F2"], duration: "8n", time: 0.75 }, // dminor_chord
+
+            { notes: ["D4", "G4", "Eb1", "Eb2"], duration: "6n", time: 1 }, // gminor_inv_chord
+            { notes: ["D4", "G4", "Eb1", "Eb2"], duration: "6n", time: 1.375 }, // gminor_inv_chord
+            { notes: ["D4", "G4", "Eb1", "Eb2"], duration: "8n", time: 1.75 }, // gminor_inv_chord
+            { notes: [], duration: "8n", time: 2 },
+            
+        
+            { notes: ["D4", "Bb4", "Eb1", "Eb2"], duration: "8n", time: 2 }, // gminor_inv_chord
+            { notes: ["D4", "Bb4", "Eb1", "Eb2"], duration: "8n", time: 2.25 }, // gminor_inv_chord
+            { notes: ["D4", "C5", "F1", "F2"], duration: "8n", time: 2.5 }, // dminor_chord
+            { notes: ["D4", "C5", "F1", "F2"], duration: "8n", time: 2.75 }, // dminor_chord
+
+            { notes: ["D4", "G4", "C1", "C2"], duration: "6n", time: 3 }, // gminor_chord
+            { notes: ["D4", "G4", "C1", "C2"], duration: "6n", time: 3.375 }, // gminor_chord
+            { notes: ["D4", "G4", "C1", "C2"], duration: "8n", time: 3.75 }, // gminor_chord
+            { notes: [], duration: "8n", time: 4 },
+
+            ///////////////////
+
+            { notes: ["D4", "Bb4", "C1", "C2"], duration: "8n", time: 4 }, // gminor_chord
+            { notes: ["D4", "Bb4", "C1", "C2"], duration: "8n", time: 4.25}, // gminor_chord
+            { notes: ["D4", "A4", "D1", "D2"], duration: "8n", time: 4.5 }, // dminor_chord
+            { notes: ["D4", "A4", "D1", "D2"], duration: "8n", time: 4.75 }, // dminor_chord
+
+            { notes: ["D4", "G4", "Eb1", "Eb2"], duration: "6n", time: 5 }, // gminor_inv_chord
+            { notes: ["D4", "G4", "Eb1", "Eb2"], duration: "6n", time: 5.375 }, // gminor_inv_chord
+            { notes: ["D4", "G4", "Eb1", "Eb2"], duration: "8n", time: 5.75 }, // gminor_inv_chord
+            { notes: [], duration: "8n", time: 6 },
+            
+        
+            { notes: ["D4", "Bb4", "Eb1", "Eb2"], duration: "8n", time: 6 }, // gminor_inv_chord
+            { notes: ["D4", "Bb4", "Eb1", "Eb2"], duration: "8n", time: 6.25 }, // gminor_inv_chord
+            { notes: ["D4", "A4", "F1", "F2"], duration: "8n", time: 6.5 }, // dminor_chord
+            { notes: ["D4", "A4", "F1", "F2"], duration: "8n", time: 6.75 }, // dminor_chord
+            { notes: ["D4", "G4", "G1", "G2"], duration: "6n", time: 7 }, // gminor_chord
+            { notes: ["D4", "G4", "G1", "G2"], duration: "6n", time: 7.375 }, // gminor_chord
+            { notes: ["D4", "G4", "G1", "G2"], duration: "8n", time: 7.75 }, // gminor_chord
+            { notes: [], duration: "8n", time: 8 },
+        ];
+        
         const song = [
+        
             { note: "D4", duration: "4n", time: 0 },
             { note: "F4", duration: "4n", time: 0.125},
             { note: "D4", duration: "4n", time: 0.25 },
@@ -355,95 +449,86 @@
             { note: "D4", duration: "4n", time: 6 },
             { note: "G4", duration: "4n", time: 6.125},
             /////////////////////
-            { note: "C4", duration: "4n", time: 5.875 },
-            { note: "D4", duration: "4n", time: 6 },
-            { note: "Bb4", duration: "8n", time: 6.0625 },
-            { note: "C5", duration: "8n", time: 6.125 },
-            //////////////////7
             { note: "C4", duration: "4n", time: 6.25 },
             { note: "D4", duration: "4n", time: 6.375 },
-            { note: "G4", duration: "4n", time: 6.5},
+            { note: "Bb4", duration: "4n", time: 6.5 },
+            { note: "C5", duration: "4n", time: 6.625 },
+            //////////////////7
+            { note: "C4", duration: "4n", time: 6.75 },
+            { note: "D4", duration: "4n", time: 6.875 },
+            { note: "G4", duration: "4n", time: 7},
             ////////////////////////
-            { note: "C4", duration: "4n", time: 6.625 },
-            { note: "D4", duration: "4n", time: 6.75 },
-            { note: "F4", duration: "4n", time: 6.875},
+            { note: "C4", duration: "4n", time: 7.125 },
+            { note: "D4", duration: "4n", time: 7.25 },
+            { note: "F4", duration: "4n", time: 7.375},
 
-            { note: "C4", duration: "4n", time: 7 },
-            { note: "D4", duration: "4n", time: 7.125 },
-            { note: "F4", duration: "4n", time: 7.25},
+            { note: "C4", duration: "4n", time: 7.5 },
+            { note: "D4", duration: "4n", time: 7.625 },
+            { note: "F4", duration: "4n", time: 7.75},
+            { note: "C4", duration: "4n", time: 7.875 },
+            { note: "", duration: "8n", time: 8},
 
-        ];
-        //var gminor_chord = ["D3", "G3", "Bb3"];
-        //var dminor_chord = ["D3", "F3", "A3"];
-        //var gminor_inv_chord = ["Bb2", "D3", "G3"];
-
-        const song2 = [
-            { note: "D3", duration: "4n", time: 0},
-            { note: "G3", duration: "4n", time: 0},
-            { note: "Bb3", duration: "4n", time: 0},
-
-            { note: "D3", duration: "4n", time: 0.25},
-            { note: "G3", duration: "4n", time: 0.25},
-            { note: "Bb3", duration: "4n", time: 0.25},
-            /////////////////////
-            { note: "D3", duration: "4n", time: 0.5},
-            { note: "F3", duration: "4n", time: 0.5},
-            { note: "A3", duration: "4n", time: 0.5},
-
-            { note: "D3", duration: "4n", time: 0.5},
-            { note: "F3", duration: "4n", time: 0.5},
-            { note: "A3", duration: "4n", time: 0.5},
-            //////////////////////////
-            { note: "Bb23", duration: "4n", time: 0.875},
-            { note: "D3", duration: "4n", time: 0.875},
-            { note: "G3", duration: "4n", time: 0.875},
-
-            { note: "Bb23", duration: "4n", time: 1.25},
-            { note: "D3", duration: "4n", time: 1.25},
-            { note: "G3", duration: "4n", time: 1.25},
-
-            { note: "Bb23", duration: "4n", time: 1.5},
-            { note: "D3", duration: "4n", time: 1.5},
-            { note: "G3", duration: "4n", time: 1.5},
-            /////////////////////////////////
-            { note: "Bb23", duration: "4n", time: 1.75},
-            { note: "D3", duration: "4n", time: 1.75},
-            { note: "G3", duration: "4n", time: 1.75},
-
-            { note: "Bb23", duration: "4n", time: 2},
-            { note: "D3", duration: "4n", time: 2},
-            { note: "G3", duration: "4n", time: 2},
-            ///////////////////////
-            { note: "D3", duration: "4n", time: 2.25},
-            { note: "F3", duration: "4n", time: 2.25},
-            { note: "A3", duration: "4n", time: 2.25},
-
-            { note: "D3", duration: "4n", time: 2.5},
-            { note: "F3", duration: "4n", time: 2.5},
-            { note: "A3", duration: "4n", time: 2.5},
-            /////////////////////
-            { note: "D3", duration: "4n", time: 2.75},
-            { note: "G3", duration: "4n", time: 2.75},
-            { note: "Bb3", duration: "4n", time: 2.75},
-
-            { note: "D3", duration: "4n", time: 3.125},
-            { note: "G3", duration: "4n", time: 3.125},
-            { note: "Bb3", duration: "4n", time: 3.125},
-
-            { note: "D3", duration: "4n", time: 3.125},
-            { note: "G3", duration: "4n", time: 3.125},
-            { note: "Bb3", duration: "4n", time: 3.125},
-
-        ];
+        ];      
         
+        
+        // Define the chord part
+        const chordPart = new Tone.Part((time, value) => {
+            if (value.notes.length > 0) {
+                // Trigger all notes in the chord
+                value.notes.forEach(note => {
+                    chordSynth.triggerAttackRelease(note, value.duration, time);
+                });
+            }
+        }, chords).start('8m'); // Start the chord part at the beginning
+
+        const chordPart2 = new Tone.Part((time, value) => {
+            if (value.notes.length > 0) {
+                // Trigger all notes in the chord
+                value.notes.forEach(note => {
+                    chordSynth.triggerAttackRelease(note, value.duration, time);
+                });
+            }
+        }, chords_ikili_kalin).start('24m'); // Start the chord part at the beginning
+
+        const chordPart3 = new Tone.Part((time, value) => {
+            if (value.notes.length > 0) {
+                // Trigger all notes in the chord
+                value.notes.forEach(note => {
+                    chordSynth.triggerAttackRelease(note, value.duration, time);
+                });
+            }
+        }, chords_ikili_ince).start('16m'); // Start the chord part at the beginning
+
+        // Enable looping
+        chordPart.loop = true;
+        chordPart.loopEnd = '2m'; // Set the loop length to 4 measures
+        chordPart.stop('16m');
+
+        chordPart2.loop = true;
+        chordPart2.loopEnd = '4m'; // Set the loop length to 4 measures
+        chordPart2.stop('32m');
+
+        chordPart3.loop = true;
+        chordPart3.loopEnd = '4m'; // Set the loop length to 4 measures
+        chordPart3.stop('24m');
+
+
         let bpm = 126; // Default BPM
         let isPlaying = false;
         let isPaused = false;
 
-        // Melody part
-        const part = new Tone.Part((time, value) => {
+        // Define the chord part
+        const melodyPart = new Tone.Part((time, value) => {
+
             synth.triggerAttackRelease(value.note, value.duration, time);
-        }, song).start(0);
+
+            }, song).start(0); // Start the chord part at the beginning
+
+        // Enable looping
+        melodyPart.loop = true;
+        melodyPart.loopEnd = '4m'; // Set the loop length to 4 measures
+        melodyPart.stop('32m');
+
 
         // first Drum part (Tone.Part)
         const drumPart1 = new Tone.Part((time, value) => {
@@ -453,6 +538,35 @@
                 clapSynth.triggerAttackRelease("16n", time);
             }
         }, drumPattern1).start(0);
+        // Set the loop to true and define the loop duration
+        drumPart1.loop = true; // Enable looping
+        drumPart1.loopEnd = '1m'; // Loop length (adjust as needed)
+        drumPart1.stop('4m');
+
+        const drumPatternClaps1 = new Tone.Part((time, value) => {
+            if (value.note === "kick") {
+                kickSynth.triggerAttackRelease("C1", "8n", time);
+            } else if (value.note === "clap") {
+                clapSynth.triggerAttackRelease("16n", time);
+            }
+        }, drumPatternClaps).start('4m');
+        drumPatternClaps1.loop = true; // Enable looping
+        drumPatternClaps1.loopEnd = '1m'; // Loop length (adjust as needed)
+        drumPatternClaps1.stop('8m');
+
+        const drumPattern21 = new Tone.Part((time, value) => {
+            if (value.note === "kick") {
+                kickSynth.triggerAttackRelease("C1", "8n", time);
+            } else if (value.note === "clap") {
+                clapSynth.triggerAttackRelease("16n", time);
+            }
+        }, drumPattern2).start('16m');
+        drumPattern21.loop = true; // Enable looping
+        drumPattern21.loopEnd = '1m'; // Loop length (adjust as needed)
+        drumPattern21.stop('32m');
+
+        // Start the Tone.js Transport
+        //Tone.Transport.start();
 
         /* couldn't make it in time
         const clapPart1 = new Tone.Part((time, value) => {
@@ -494,6 +608,17 @@
         const oscillatorSelect = document.getElementById("oscillatorSelect");
         oscillatorSelect.addEventListener("change", (e) => {
             synth.oscillator.type = e.target.value;
+        });
+
+         // Update oscillator type when the user selects a new type
+        const oscillatorSelect2 = document.getElementById("oscillatorSelect2");
+        oscillatorSelect2.addEventListener("change", (e) => {
+            const newOscillatorType = e.target.value;
+            chordSynth.set({
+                oscillator: {
+                    type: newOscillatorType
+                }
+            });
         });
 
         // Update filter frequency when the user changes the slider
@@ -545,6 +670,7 @@
         distortion.distortion = 0;
         filter.frequency.value = 1000;
         synth.oscillator.type = "sine";  // Default oscillator type
+        chordSynth.oscillator.type = "sine";
         pan.pan.value = 0; // Default panning
     </script>
 </body>
